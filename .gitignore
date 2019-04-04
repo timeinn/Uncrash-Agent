@@ -1,0 +1,25 @@
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+*.iws
+*.iml
+*.ipr
+
+### Other ###
+.DS_Store
+/node_modules/
+/dist
