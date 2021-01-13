@@ -20,7 +20,7 @@ function packageInstall ()
 	if [ -n "$(command -v apt-get)" ]
 	then
 		echo -e "|\n|   Notice: Installing required package '$1' via 'apt-get'"
-		apt-get -y update
+		# apt-get -y update
 		apt-get -y install $1
 	elif [ -n "$(command -v yum)" ]
 	then
@@ -90,7 +90,7 @@ then
 		if [ -n "$(command -v apt-get)" ]
 		then
 			echo -e "|\n|   Notice: Installing required package 'cron' via 'apt-get'"
-		    apt-get -y update
+		    # apt-get -y update
 		    apt-get -y install cron
 		elif [ -n "$(command -v yum)" ]
 		then

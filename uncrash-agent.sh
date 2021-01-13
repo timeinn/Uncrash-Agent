@@ -13,6 +13,7 @@
 PATH=/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin
 
 version="1.0.0.0013"
+uncrash_srv="http://172.20.2.190:18505/agent/logs"
 
 # Authentication required
 if [ -f /var/uncrash/auth.token ]
@@ -22,6 +23,14 @@ else
 	echo "Error: Authentication log is missing."
 	exit 1
 fi
+
+function stopTime ()
+{
+	endtime=`date +'%Y-%m-%d %H:%M:%S'`
+	start_seconds=$(date --date="$starttime" +%s);
+	end_seconds=$(date --date="$endtime" +%s);
+	echo "本次运行时间： $1 ::"$((end_seconds-start_seconds))"s"
+}
 
 # Prepare values
 function prep ()
@@ -221,24 +230,26 @@ tx_gap=$(prep $(num "$tx_gap"))
 load_cpu=$(prep $(num "$load_cpu"))
 load_io=$(prep $(num "$load_io"))
 
+starttime=`date +'%Y-%m-%d %H:%M:%S'`
 # Get network latency
-ping_cn=$(prep $(num "$(ping -c 2 -w 2 ping-cn.node.uncrash.dev | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
-ping_hk=$(prep $(num "$(ping -c 2 -w 2 ping-hk.node.uncrash.dev | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
-ping_jp=$(prep $(num "$(ping -c 2 -w 2 ping-jp.node.uncrash.dev | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
-ping_sg=$(prep $(num "$(ping -c 2 -w 2 ping-sg.node.uncrash.dev | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
-ping_eu=$(prep $(num "$(ping -c 2 -w 2 ping-eu.node.uncrash.dev | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
-ping_us=$(prep $(num "$(ping -c 2 -w 2 ping-us.node.uncrash.dev | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
-ping_as=$(prep $(num "$(ping -c 2 -w 2 ping-as.node.uncrash.dev | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+ping_cn=$(prep $(num "$(ping -c 2 -w 1 ping-cn.node.uncrash.net | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+ping_hk=$(prep $(num "$(ping -c 2 -w 1 ping-hk.node.uncrash.net | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+ping_jp=$(prep $(num "$(ping -c 2 -w 1 ping-jp.node.uncrash.net | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+ping_sg=$(prep $(num "$(ping -c 2 -w 1 ping-sg.node.uncrash.net | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+ping_eu=$(prep $(num "$(ping -c 2 -w 1 ping-eu.node.uncrash.net | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+ping_us=$(prep $(num "$(ping -c 2 -w 1 ping-us.node.uncrash.net | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+# ping_as=$(prep $(num "$(ping -c 2 -w 2 ping-as.node.uncrash.net | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
+stopTime "Get network latency"
 
 # Build data for post
-data_post="token=${auth[0]}&data=$(base "$version") $(base "$uptime") $(base "$sessions") $(base "$processes") $(base "$processes_array") $(base "$file_handles") $(base "$file_handles_limit") $(base "$os_kernel") $(base "$os_name") $(base "$os_arch") $(base "$cpu_name") $(base "$cpu_cores") $(base "$cpu_freq") $(base "$ram_total") $(base "$ram_usage") $(base "$swap_total") $(base "$swap_usage") $(base "$disk_array") $(base "$disk_total") $(base "$disk_usage") $(base "$connections") $(base "$nic") $(base "$ipv4") $(base "$ipv6") $(base "$rx") $(base "$tx") $(base "$rx_gap") $(base "$tx_gap") $(base "$load") $(base "$load_cpu") $(base "$load_io") $(base "$ping_cn") $(base "$ping_hk") $(base "$ping_jp") $(base "$ping_sg") $(base "$ping_eu") $(base "$ping_us") $(base "$ping_as")"
+data_post="token=${auth[0]}&data=$(base "$version") $(base "$uptime") $(base "$sessions") $(base "$processes") $(base "$processes_array") $(base "$file_handles") $(base "$file_handles_limit") $(base "$os_kernel") $(base "$os_name") $(base "$os_arch") $(base "$cpu_name") $(base "$cpu_cores") $(base "$cpu_freq") $(base "$ram_total") $(base "$ram_usage") $(base "$swap_total") $(base "$swap_usage") $(base "$disk_array") $(base "$disk_total") $(base "$disk_usage") $(base "$connections") $(base "$nic") $(base "$ipv4") $(base "$ipv6") $(base "$rx") $(base "$tx") $(base "$rx_gap") $(base "$tx_gap") $(base "$load") $(base "$load_cpu") $(base "$load_io") $(base "1:$ping_cn,2:$ping_hk,3:$ping_jp,4:$ping_sg,5:$ping_eu,6:$ping_us")"
 
 # API request with automatic termination
 if [ -n "$(command -v timeout)" ]
 then
-	timeout -s SIGKILL 30 wget -q -o /dev/null -O /var/uncrash/agent.log -T 25 --post-data "$data_post" --no-check-certificate "https://api.uncrash.dev/v1/stat/agent"
+	timeout -s SIGKILL 30 wget -O /var/uncrash/agent.log -T 25 --post-data "$data_post" --no-check-certificate "$uncrash_srv"
 else
-	wget -q -o /dev/null -O /var/uncrash/agent.log -T 25 --post-data "$data_post" --no-check-certificate "https://api.uncrash.dev/v1/stat/agent"
+	wget -q -o /dev/null -O /var/uncrash/agent.log -T 25 --post-data "$data_post" --no-check-certificate "$uncrash_srv"
 	wget_pid=$! 
 	wget_counter=0
 	wget_timeout=30
