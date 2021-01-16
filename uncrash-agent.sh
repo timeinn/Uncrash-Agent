@@ -18,7 +18,7 @@ uncrash_srv="http://172.20.2.190:8080/api/agent"
 # Authentication required
 if [ -f /var/uncrash/auth.token ]
 then
-	auth=($(cat /etc/uncrash/auth.token))
+	auth=($(cat /var/uncrash/auth.token))
 else
 	echo "Error: Authentication log is missing."
 	exit 1
