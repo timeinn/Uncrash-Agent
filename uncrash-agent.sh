@@ -13,7 +13,7 @@
 PATH=/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin
 
 version="1.0.0.0013"
-uncrash_srv="http://172.16.8.20:8080/api/agent"
+uncrash_srv="http://localhost:8000/api/v1/agent"
 
 # Authentication required
 if [ -f /var/uncrash/auth.token ]
@@ -29,7 +29,7 @@ function stopTime ()
 	endtime=`date +'%Y-%m-%d %H:%M:%S'`
 	start_seconds=$(date --date="$starttime" +%s);
 	end_seconds=$(date --date="$endtime" +%s);
-	echo "本次运行时间： $1 ::"$((end_seconds-start_seconds))"s"
+	echo "$1 ::"$((end_seconds-start_seconds))"s"
 }
 
 # Prepare values
@@ -41,7 +41,7 @@ function prep ()
 # Base64 values
 function base ()
 {
-	echo "$1" | tr -d '\n' | base64 | tr -d '=' | tr -d '\n' | sed 's/\//%2F/g' | sed 's/\+/%2B/g'
+	echo "$1" | tr -d '\n' | base64 | tr -d '=' | tr -d '\n' # | sed 's/\//%2F/g' | sed 's/\+/%2B/g'
 }
 
 # Integer values
@@ -244,7 +244,7 @@ stopTime "Get network latency"
 # Build data for post
 data_json="{\"token\": \"${token}\", \"data\": \"$(base "$version") $(base "$uptime") $(base "$sessions") $(base "$processes") $(base "$processes_array") $(base "$file_handles") $(base "$file_handles_limit") $(base "$os_kernel") $(base "$os_name") $(base "$os_arch") $(base "$cpu_name") $(base "$cpu_cores") $(base "$cpu_freq") $(base "$ram_total") $(base "$ram_usage") $(base "$swap_total") $(base "$swap_usage") $(base "$disk_array") $(base "$disk_total") $(base "$disk_usage") $(base "$connections") $(base "$nic") $(base "$ipv4") $(base "$ipv6") $(base "$rx") $(base "$tx") $(base "$rx_gap") $(base "$tx_gap") $(base "$load") $(base "$load_cpu") $(base "$load_io") $(base "1:$ping_cn;2:$ping_hk;3:$ping_jp;4:$ping_sg;5:$ping_eu;6:$ping_us;")\"}"
 
-echo "$data_json" > ./data.txt
+echo "$data_json" > ./debug_data.txt
 
 # API request with automatic termination
 if [ -n "$(command -v timeout)" ]
