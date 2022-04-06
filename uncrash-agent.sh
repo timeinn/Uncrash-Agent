@@ -13,7 +13,7 @@
 PATH=/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin
 
 version="1.0.0.0013"
-uncrash_srv="http://localhost:8000/api/v1/agent"
+uncrash_srv="http://localhost:9000/api/v1/agent"
 
 # Authentication required
 if [ -f /var/uncrash/auth.token ]
